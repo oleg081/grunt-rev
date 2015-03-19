@@ -26,22 +26,35 @@ module.exports = function(grunt) {
     var options = this.options({
       encoding: 'utf8',
       algorithm: 'md5',
-      length: 8
+      length: 8,
+      mapping: false,
+      mapPath: './hashMap.json'
     });
 
     this.files.forEach(function(filePair) {
-      filePair.src.forEach(function(f) {
+      var map = {}, mapPath;	
 
+      filePair.src.forEach(function(f) {
         var hash = md5(f, options.algorithm, 'hex', options.encoding),
           prefix = hash.slice(0, options.length),
           renamed = [prefix, path.basename(f)].join('.'),
           outPath = path.resolve(path.dirname(f), renamed);
+
+        if (options.mapping) {
+        	map[path.basename(f)] = renamed;
+        }  
 
         grunt.verbose.ok().ok(hash);
         fs.renameSync(f, outPath);
         grunt.log.write(f + ' ').ok(renamed);
 
       });
+
+      if (options.mapping) {
+      	mapPath = path.resolve(options.mapPath);
+      	grunt.file.write(mapPath, JSON.stringify(map, null, 4));
+      	grunt.log.write(mapPath + ' was created.');
+      }
     });
 
   });
